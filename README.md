@@ -13,7 +13,7 @@ docker run -d -p 5000:5000 qa-challenge
 
 ## Step 2
 
-To build the Api which incrementally load the data, i used the requests command.
+To build the Api which incrementally load the data, I used the requests command.
 To see an example, run the app in the terminal using:
 
 ```
@@ -25,6 +25,7 @@ and then run the ingestion script:
 ```
 python api/ingestion.py
 ```
+It shows 5 pages of the dataframe loaded from the API
 
 The Api basically is a get request in which the parameter is page.
 I created two function:
@@ -49,7 +50,7 @@ I've created 4 different routes:
 
 I've maintained the same Api endpoint: *api/v1/data*
 
-To solve the problem of load data incrementally, and update the model incrementally, i used
+To solve the problem of load data incrementally, and update the model incrementally, I used
 global variabels to count the pages loaded, store the partial models, and store the cumulative results of the score.
 
 I differentiated two kind of scores:
@@ -74,6 +75,7 @@ As an example, in the *data* route, used to compute partial classification resul
 
     # increment page for the next Api call
     pageClass = pageClass + 1
+
 ```
 The first statement is needed to modify the global variables. Then the page *pageClass*, which refer to the page 
 for classification algorithm, is loaded as a dataframe in the local stream variable. *pageClass* is then incremented.
@@ -90,8 +92,9 @@ Once the data are loaded, create local *X* and local *y* which are used to fit t
     partial_res_lr = partial_classification_model(lr_mdl, X, y)
 ```
 
-Then, the global models are updatetd, the partial results are assigned to two local variables, and the 
-cumulative scores are updated thank to the *update_score* function.
+Then, the global models are updated, the partial results are assigned to two local variables, and the 
+cumulative scores are updated thank to the *update_score* function, which basically update the mean of a series, 
+given a new observation of the series.
 
 ```
     # update list of models obj
@@ -123,11 +126,39 @@ Finally, the data are encapsulated in a Response Object
 
 ### Results
 To show the results, I used two templates, *templates/classification_templates.html* and 
-*templates/regression_templates.html* which both works with the same logic.
+*templates/regression_templates.html* which work with the same logic.
 
-There are two sensors, which are displayed in the first part of the page, which display the value of the 
+There are two "sensors", which are displayed in the first part of the page, which show the value of the 
 cumulative scores, and two scatter plots of the two models used, in which the X axis indicates the time of the computation, 
 and the Y axis, indicates the Score of the model.
 
+The graphs are updated every 5 seconds. 
+
 ![ Alt text](QAChallengeGif.gif)
 
+### Classification Models
+
+I used the Scikit learn module, which provides incremental models.
+In particular, I used The Stocastic Gradient Descent Classifier, *SGDClassifier*, which two different loss functions:
+- *hinge* : Support Vector Machine Classifier
+- *log*: Logistic Regression Classifier
+
+The overall score of the incremental models is about 75%
+
+### Regression Models
+
+I used the Scikit-learn module, which provides incremental models.
+In particular, I used The Stocastic Gradient Descent Regressor, *SGDRegressor*, which two different loss functions:
+- *squared_loss* : OLS regression
+- *huber*: Huber Regression
+
+I still have a problem in the regression, since the performance are bad.
+
+### Possible Improvements
+The dashboard is very basic, and the results are considered only in terms of scores, and this is a big missing point.
+
+- User experience: it's very basic, and at least the home should have a button connected to the classification and
+ regression page
+- Data Visualization: There should be an intermediate page for data visualization, both for regression and classification algos
+
+ 
